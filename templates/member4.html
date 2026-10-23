@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Farmer Dost | Part 2 - Crop Suggestions</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header class="site-header">
+  <div class="brand">🌱 Farmer Dost</div>
+  <div class="subtitle">Part 2 · Improved crop suggestion module</div>
+  
+<div class="language-selector">
+  <label for="languageSelect">Choose Language / भाषा चुनें:</label>
+  <select id="languageSelect">
+    <option value="en">English</option>
+    <option value="hi">हिन्दी (Hindi)</option>
+    <option value="pa">ਪੰਜਾਬੀ (Punjabi)</option>
+    <option value="ta">தமிழ் (Tamil)</option>
+    <option value="te">తెలుగు (Telugu)</option>
+    <option value="bn">বাংলা (Bengali)</option>
+  </select>
+</div>
+
+</header>
+<main class="container">
+  <nav class="tabs">
+    <button class="tab active" data-panel="cropPanel">Crop Suggestions</button>
+    <button class="tab" data-panel="chatPanel">Farmer Assistant</button>
+  </nav>
+
+  <section id="cropPanel" class="panel">
+    <h1>Find suitable crops</h1>
+    <p class="muted">Choose your state and district, season, and enter soil-test and climate values.</p>
+    <div id="locationStatus" class="notice" role="status">Loading India state and district list...</div>
+    <form id="cropForm">
+      <div class="grid">
+        <label>State / Union Territory
+          <select id="stateSelect" name="state" required>
+            <option value="">Loading states...</option>
+          </select>
+        </label>
+        <label>District
+          <select id="districtSelect" name="district" required disabled>
+            <option value="">Choose a state first</option>
+          </select>
+        </label>
+        <label>Season
+          <select name="season" required>
+            <option value="kharif">Kharif (monsoon season)</option>
+            <option value="rabi">Rabi (cooler season)</option>
+            <option value="zaid">Zaid (warm interval)</option>
+          </select>
+        </label>
+        <label>Nitrogen (N) <input name="N" type="number" min="0" step="any" value="90" required></label>
+        <label>Phosphorus (P) <input name="P" type="number" min="0" step="any" value="42" required></label>
+        <label>Potassium (K) <input name="K" type="number" min="0" step="any" value="43" required></label>
+        <label>Soil pH <input name="ph" type="number" min="0" max="14" step="any" value="6.5" required></label>
+        <label>Temperature (°C) <input name="temperature" type="number" step="any" value="25" required></label>
+        <label>Humidity (%) <input name="humidity" type="number" min="0" max="100" step="any" value="70" required></label>
+        <label>Estimated seasonal rainfall (mm) <input name="rainfall" type="number" min="0" step="any" value="100" required></label>
+      </div>
+      <p class="hint">Use soil-test values where possible. N, P, K units must match the dataset. Sample values are only for testing.</p>
+      <button class="primary" type="submit">Get crop suggestions</button>
+    </form>
+    <div id="cropResult" class="result hidden" aria-live="polite"></div>
+  </section>
+
+  <section id="chatPanel" class="panel hidden">
+    <h1>Ask Farmer Dost</h1>
+    <p class="muted">The chatbot is retained from Part 1 for now. We'll improve it after the crop module is tested.</p>
+    <div id="chatMessages" class="chat-messages" aria-live="polite">
+      <div class="bubble bot">Namaste! I am Farmer Dost. What would you like to know about farming?</div>
+    </div>
+    <form id="chatForm" class="chat-form">
+      <input id="chatInput" name="message" placeholder="Ask a farming question..." autocomplete="off" required>
+      <button class="primary" type="submit">Send</button>
+    </form>
+  </section>
+  <footer>Farmer Dost · Member 4 · Part 2 prototype</footer>
+</main>
+<script src="{{ url_for('static', filename='member4.js') }}"></script>
+</body>
+</html>

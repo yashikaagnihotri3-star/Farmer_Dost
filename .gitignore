@@ -1,0 +1,10 @@
+.venv/
+venv/
+VENV/
+__pycache__/
+*.py[cod]
+.env
+.env.*
+!.env.example
+models/*.joblib
+data/Crop_recommendation.csv
