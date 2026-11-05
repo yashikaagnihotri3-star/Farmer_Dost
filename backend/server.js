@@ -3,12 +3,14 @@ import { readConfig } from './config/env.js';
 import { connectDatabase } from './config/database.js';
 import { createApp } from './app.js';
 import { User } from './models/User.js';
+import { SoilReport } from './models/SoilReport.js';
 
 let server;
 try {
   const config = readConfig();
   await connectDatabase(config.MONGODB_URI);
   await User.init();
+  await SoilReport.init();
   const app = createApp(config);
   server = app.listen(config.PORT, () => console.log(`Farmer Dost API listening on port ${config.PORT}`));
 } catch (error) {

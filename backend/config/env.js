@@ -10,6 +10,7 @@ const schema = z.object({
   BCRYPT_ROUNDS: z.coerce.number().int().min(10).max(15).default(12),
   TRUST_PROXY: z.enum(['true', 'false']).default('false'),
   GOOGLE_CLIENT_ID: z.string().default(''),
+  SOIL_UPLOAD_DIR: z.string().default(''),
 });
 
 export function readConfig(env = process.env) {

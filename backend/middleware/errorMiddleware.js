@@ -4,6 +4,13 @@ export function notFoundHandler(req, res) {
 
 export function errorHandler(error, req, res, next) { // eslint-disable-line no-unused-vars
   if (error?.type === 'entity.too.large') return res.status(413).json({ error: { code: 'REQUEST_TOO_LARGE' } });
+  if (['UPLOAD_NOT_FOUND', 'INVALID_FILE_CONTENT'].includes(error?.message)) {
+    return res.status(error.status || 400).json({ error: { code: error.message } });
+  }
+  if (error?.name === 'ValidationError' && error?.errors) {
+    const fields = Object.fromEntries(Object.keys(error.errors).map((field) => [field, 'invalid_value']));
+    return res.status(400).json({ error: { code: 'VALIDATION_ERROR', fields } });
+  }
   if (error?.name === 'ValidationError') return res.status(400).json({ error: { code: 'VALIDATION_ERROR' } });
   if (error?.name === 'MongoServerSelectionError' || error?.name === 'MongoNetworkError') {
     return res.status(503).json({ error: { code: 'SERVICE_UNAVAILABLE' } });

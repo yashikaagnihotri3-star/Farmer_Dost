@@ -5,6 +5,9 @@ import MongoStore from 'connect-mongo';
 import cors from 'cors';
 import helmet from 'helmet';
 import { createAuthRouter } from './routes/authRoutes.js';
+import { createSoilReportRouter } from './routes/soilReportRoutes.js';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { errorHandler, notFoundHandler } from './middleware/errorMiddleware.js';
 
 export function createApp(config) {
@@ -12,7 +15,7 @@ export function createApp(config) {
   if (config.TRUST_PROXY === 'true') app.set('trust proxy', 1);
   app.disable('x-powered-by');
   app.use(helmet());
-  app.use(cors({ origin: config.FRONTEND_ORIGIN, credentials: true, methods: ['GET', 'POST', 'PATCH'], allowedHeaders: ['Content-Type', 'X-CSRF-Token'] }));
+  app.use(cors({ origin: config.FRONTEND_ORIGIN, credentials: true, methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], allowedHeaders: ['Content-Type', 'X-CSRF-Token'] }));
   app.use(express.json({ limit: '16kb', strict: true }));
   const sessionStore = MongoStore.create({ mongoUrl: config.MONGODB_URI, collectionName: 'sessions', ttl: 60 * 60 * 24 * 7 });
   app.locals.sessionStore = sessionStore;
@@ -32,6 +35,9 @@ export function createApp(config) {
     authLimit: config.NODE_ENV === 'test' ? 1000 : undefined,
     googleClientId: config.GOOGLE_CLIENT_ID,
   }));
+  const backendDir = path.dirname(fileURLToPath(import.meta.url));
+  const uploadRoot = path.resolve(config.SOIL_UPLOAD_DIR || path.join(backendDir, 'private_uploads', 'soil-reports'));
+  app.use('/api/soil-reports', createSoilReportRouter({ uploadRoot }));
   app.use(notFoundHandler);
   app.use(errorHandler);
   return app;

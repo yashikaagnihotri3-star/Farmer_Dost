@@ -17,7 +17,7 @@ export default function WelcomePage() {
     <section className="hero-section"><div className="hero-shell">
       <div className="hero-copy"><div className="eyebrow"><span className="eyebrow-dot" />{t('welcomeEyebrow')}</div>
         <h1>{t('welcomeTitle')}</h1><p className="hero-description">{t('welcomeDescription')}</p>
-        <div className="hero-actions"><Link className="button" to="/register">{t('createAccount')}<ArrowRight size={18} aria-hidden="true" /></Link><Link className="button button-secondary" to="/login">{t('login')}</Link></div>
+        <div className="hero-actions"><Link className="button" to="/register">{t('createAccount')}<ArrowRight size={18} aria-hidden="true" /></Link><Link className="button button-secondary" to="/login">{t('login')}</Link><Link className="button button-secondary" to="/soil-reports">{t('soilTitle')}</Link></div>
         <div className="hero-note"><span className="note-sprout"><Sprout size={17} aria-hidden="true" /></span>{t('welcomeNote')}</div>
       </div>
       <div className="hero-art" role="img" aria-label={t('decorativeFarm')}>

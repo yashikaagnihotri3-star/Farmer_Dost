@@ -14,20 +14,43 @@ export class ApiError extends Error {
   }
 }
 
-async function request(path, { method = 'GET', body, csrf = false } = {}) {
+export async function apiRequest(path, { method = 'GET', body, csrf = false, responseType = 'json', onUploadProgress } = {}) {
   const headers = {};
 
-  if (body !== undefined) {
+  if (body !== undefined && !(body instanceof FormData)) {
     headers['Content-Type'] = 'application/json';
   }
 
   if (csrf) {
     if (!csrfToken) {
-      const csrfResponse = await request('/auth/csrf');
+      const csrfResponse = await apiRequest('/auth/csrf');
       csrfToken = csrfResponse.csrfToken;
     }
 
     headers['X-CSRF-Token'] = csrfToken;
+  }
+
+  if (onUploadProgress && body instanceof FormData) {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open(method, `${apiBaseUrl}${path}`);
+      xhr.withCredentials = true;
+      if (csrf) xhr.setRequestHeader('X-CSRF-Token', csrfToken);
+      xhr.upload.onprogress = (event) => { if (event.lengthComputable) onUploadProgress(Math.round((event.loaded / event.total) * 100)); };
+      xhr.onerror = () => reject(new ApiError('NETWORK_ERROR'));
+      xhr.onload = () => {
+        if (xhr.status === 204) { resolve(null); return; }
+        let payload = {};
+        try { payload = JSON.parse(xhr.responseText || '{}'); } catch { /* handled below */ }
+        if (xhr.status < 200 || xhr.status >= 300) {
+          if (xhr.status === 403 && payload?.error?.code === 'CSRF_INVALID') csrfToken = null;
+          reject(new ApiError(payload?.error?.code || (xhr.status >= 500 ? 'SERVICE_UNAVAILABLE' : 'REQUEST_FAILED'), { status: xhr.status, fields: payload?.error?.fields || {} }));
+          return;
+        }
+        resolve(payload);
+      };
+      xhr.send(body);
+    });
   }
 
   let response;
@@ -37,7 +60,7 @@ async function request(path, { method = 'GET', body, csrf = false } = {}) {
       method,
       credentials: 'include',
       headers,
-      ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+      ...(body === undefined ? {} : { body: body instanceof FormData ? body : JSON.stringify(body) }),
     });
   } catch {
     throw new ApiError('NETWORK_ERROR');
@@ -47,10 +70,12 @@ async function request(path, { method = 'GET', body, csrf = false } = {}) {
 
   let payload = {};
 
-  try {
-    payload = await response.json();
-  } catch {
-    // Handle empty or non-JSON responses below.
+  if (!response.ok || responseType !== 'blob') {
+    try {
+      payload = await response.json();
+    } catch {
+      // Handle empty or non-JSON responses below.
+    }
   }
 
   if (!response.ok) {
@@ -68,19 +93,20 @@ async function request(path, { method = 'GET', body, csrf = false } = {}) {
     );
   }
 
+  if (responseType === 'blob') return response.blob();
   return payload;
 }
 
 export const authService = {
   register: (payload) =>
-    request('/auth/register', {
+    apiRequest('/auth/register', {
       method: 'POST',
       body: payload,
       csrf: true,
     }),
 
   login: async (payload) => {
-    const result = await request('/auth/login', {
+    const result = await apiRequest('/auth/login', {
       method: 'POST',
       body: payload,
       csrf: true,
@@ -92,7 +118,7 @@ export const authService = {
 
   // Google sign-in
   googleLogin: async (payload) => {
-    const result = await request('/auth/google', {
+    const result = await apiRequest('/auth/google', {
       method: 'POST',
       body: payload,
       csrf: true,
@@ -103,7 +129,7 @@ export const authService = {
   },
 
   logout: async () => {
-    const result = await request('/auth/logout', {
+    const result = await apiRequest('/auth/logout', {
       method: 'POST',
       csrf: true,
     });
@@ -112,11 +138,11 @@ export const authService = {
     return result;
   },
 
-  me: async () => (await request('/auth/me')).user,
+  me: async () => (await apiRequest('/auth/me')).user,
 
   updateLanguage: async (preferredLanguage) =>
     (
-      await request('/auth/me/preferences', {
+      await apiRequest('/auth/me/preferences', {
         method: 'PATCH',
         body: { preferredLanguage },
         csrf: true,
